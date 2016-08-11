@@ -10,15 +10,15 @@
 pkgname=('jre8-openjdk-headless-jetbrains-git' 'jre8-openjdk-jetbrains-git' 'jdk8-openjdk-jetbrains-git')
 pkgbase=java8-openjdk-jetbrains-git
 _java_ver=8
-_jdk_update=76
-_jdk_build=03
-pkgver=8.u76.b241.r0.gf3983c7
+_jdk_update=102
+_jdk_build=14
+pkgver=8.u112.b274.r0.g651e80a
 _repo_ver=jdk${_java_ver}u${_jdk_update}-b${_jdk_build}
 pkgrel=1
 arch=('i686' 'x86_64')
 url='https://github.com/JetBrains/jdk8u'
 license=('custom')
-makedepends=('jdk7-openjdk' 'gcc5' 'ccache' 'cpio' 'unzip' 'zip'
+makedepends=('jdk7-openjdk' 'ccache' 'cpio' 'unzip' 'zip'
              'libxrender' 'libxtst' 'fontconfig' 'libcups' 'alsa-lib')
 _url_src=https://github.com/JetBrains
 source=(jdk8u-${_repo_ver}::git+${_url_src}/jdk8u.git
@@ -28,7 +28,8 @@ source=(jdk8u-${_repo_ver}::git+${_url_src}/jdk8u.git
         jaxws-${_repo_ver}::git+${_url_src}/jdk8u_jaxws.git
         jaxp-${_repo_ver}::git+${_url_src}/jdk8u_jaxp.git
         langtools-${_repo_ver}::git+${_url_src}/jdk8u_langtools.git
-        nashorn-${_repo_ver}::git+${_url_src}/jdk8u_nashorn.git)
+        nashorn-${_repo_ver}::git+${_url_src}/jdk8u_nashorn.git
+        build_with_gcc6.patch)
 
 sha256sums=('SKIP'
             'SKIP'
@@ -37,7 +38,8 @@ sha256sums=('SKIP'
             'SKIP'
             'SKIP'
             'SKIP'
-            'SKIP')
+            'SKIP'
+            'dcf5f495620231068b0c925a33ba7246bbeb85e9ae822b30ab77a66839c2d3b6')
 
 case "${CARCH}" in
   'x86_64') _JARCH=amd64 ;;
@@ -65,18 +67,17 @@ prepare() {
   do
     ln -s ../${subrepo}-${_repo_ver} ${subrepo}
   done
+  
+  patch -p1 < ../build_with_gcc6.patch
+  
 }
 
 build() {
-  # Workaround for OpenJDK not compiling with GCC 6
-  mkdir -p "${srcdir}/gcc-bin-override"
-  ln -sf "/usr/bin/gcc-5" "${srcdir}/gcc-bin-override/gcc"
-  ln -sf "/usr/bin/g++-5" "${srcdir}/gcc-bin-override/g++"
-  export PATH="${srcdir}/gcc-bin-override/:${PATH}"
-
   cd "${srcdir}/jdk8u-${_repo_ver}"
 
   unset JAVA_HOME
+  unset _JAVA_OPTIONS
+  unset CLASSPATH
   # http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1346
   export MAKEFLAGS=${MAKEFLAGS/-j*}
 
